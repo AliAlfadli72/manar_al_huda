@@ -22,6 +22,7 @@ workflows:
         script: |
           flutter pub get
           flutter build ios --config-only
+          find ios -name "Package.swift" -exec sed -i '' 's/"13.0"/"15.0"/g; s/"12.0"/"15.0"/g; s/"11.0"/"15.0"/g; s/"14.0"/"15.0"/g' {} + 2>/dev/null || true
           cd ios && pod install
 
       - name: Configure code signing
@@ -29,13 +30,14 @@ workflows:
 
       - name: Build iOS IPA
         script: |
-          xcode-project build-ipa --workspace ios/Runner.xcworkspace --scheme Runner
+          flutter build ipa --release
+          xcodebuild -exportArchive \
+            -archivePath $(find build/ios -name "*.xcarchive" | head -n 1) \
+            -exportPath build/ios/ipa \
+            -exportOptionsPlist /Users/builder/export_options.plist
 
     artifacts:
       - build/ios/ipa/*.ipa
-      - build/ios/archive/*.xcarchive
-      - "*.ipa"
-      - "**/*.ipa"
       - /tmp/xcodebuild_logs/*.log
 
     publishing:
