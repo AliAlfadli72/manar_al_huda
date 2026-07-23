@@ -9,6 +9,8 @@ workflows:
       flutter: stable
       xcode: latest
       cocoapods: default
+      vars:
+        IPHONEOS_DEPLOYMENT_TARGET: "15.0"
       ios_signing:
         provisioning_profiles:
           - manar_al_huda_profile
@@ -19,6 +21,7 @@ workflows:
         script: |
           flutter packages pub get
           flutter build ios --config-only
+          echo "IPHONEOS_DEPLOYMENT_TARGET = 15.0" >> ios/Flutter/Generated.xcconfig
           find ios/Flutter/ephemeral/Packages -name "Package.swift" -exec sed -i '' 's/\.v11/\.v15/g; s/\.v12/\.v15/g; s/\.v13/\.v15/g; s/\.v14/\.v15/g' {} + 2>/dev/null || true
           cd ios && pod install
       - name: Set up code signing settings on Xcode project
@@ -26,7 +29,7 @@ workflows:
           xcode-project use-profiles
       - name: Build IPA for iOS
         script: |
-          xcode-project build-ipa --workspace ios/Runner.xcworkspace --scheme Runner IPHONEOS_DEPLOYMENT_TARGET=15.0
+          xcode-project build-ipa --workspace ios/Runner.xcworkspace --scheme Runner
     artifacts:
       - build/ios/ipa/*.ipa
       - "**/*.ipa"
