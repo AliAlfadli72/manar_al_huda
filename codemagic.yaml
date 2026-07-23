@@ -28,8 +28,7 @@ workflows:
           xcode-project use-profiles
       - name: Build IPA for iOS
         script: |
-          find ios -name "Package.swift" -exec sed -i '' 's/"13.0"/"15.0"/g; s/"12.0"/"15.0"/g; s/"11.0"/"15.0"/g; s/"14.0"/"15.0"/g' {} + 2>/dev/null || true
-          xcode-project build-ipa --workspace ios/Runner.xcworkspace --scheme Runner
+          flutter build ipa --release
     artifacts:
       - build/ios/ipa/*.ipa
       - "**/*.ipa"
