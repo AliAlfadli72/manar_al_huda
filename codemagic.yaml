@@ -13,9 +13,10 @@ workflows:
         distribution_type: app_store
         bundle_identifier: com.manaralhudha.app.manarAlHuda
     scripts:
-      - name: Set up code signing settings on Xcode project
+      - name: Fetch and create signing files automatically
         script: |
-          xcode-project use-profiles
+          app-store-connect fetch-signing-files "com.manaralhudha.app.manarAlHuda" --type IOS_APP_STORE --create
+          xcode-project apply-profiles
       - name: Get Flutter packages
         script: |
           flutter packages pub get
