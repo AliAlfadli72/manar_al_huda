@@ -21,40 +21,9 @@ workflows:
           # Initialize a fresh unlocked keychain for this build
           keychain initialize
 
-          # Revoke all existing Distribution certificates to avoid Apple's 2-certificate limit
-          python3 -c "
-          import json, subprocess, sys
-
-          print('Fetching existing certificates from App Store Connect...')
-          res = subprocess.run(['app-store-connect', 'certificates', 'list', '--json'], capture_output=True, text=True)
-          if res.returncode == 0 and res.stdout.strip():
-              try:
-                  data = json.loads(res.stdout)
-                  items = data.get('data', data) if isinstance(data, dict) else data
-                  if isinstance(items, list):
-                      for item in items:
-                          cid = item.get('id') if isinstance(item, dict) else None
-                          attrs = item.get('attributes', {}) if isinstance(item, dict) and isinstance(item.get('attributes'), dict) else {}
-                          ctype = attrs.get('certificateType') or (item.get('certificateType') if isinstance(item, dict) else '') or ''
-                          if cid:
-                              print(f'Found certificate {cid} (Type: {ctype})')
-                              print(f'Revoking certificate {cid}...')
-                              subprocess.run(['app-store-connect', 'certificates', 'revoke', '--certificate-id', str(cid)], capture_output=True, text=True)
-                              subprocess.run(['app-store-connect', 'certificates', 'revoke', str(cid)], capture_output=True, text=True)
-              except Exception as e:
-                  print(f'Error parsing certificates: {e}')
-          else:
-              print(f'Certificates list response/error: {res.stderr}')
-          " || true
-
-          # Generate private key on the fly
-          PRIVATE_KEY=$(openssl genrsa 2048 2>/dev/null)
-
-          # Fetch/create signing files passing the key (creates .p12 + provisioning profile)
+          # Fetch existing signing files or create if not present
           app-store-connect fetch-signing-files com.manaralhudha.app.manarAlHuda \
-            --type IOS_APP_STORE \
-            --certificate-key "$PRIVATE_KEY" \
-            --create
+            --type IOS_APP_STORE || app-store-connect fetch-signing-files com.manaralhudha.app.manarAlHuda --type IOS_APP_STORE --create
 
           # Add the .p12 certificate to the initialized keychain
           keychain add-certificates
