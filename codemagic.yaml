@@ -3,10 +3,15 @@ workflows:
     name: iOS Release Workflow
     instance_type: mac_mini_m1
     max_build_duration: 60
+    integrations:
+      app_store_connect: Codemagic Build Key
     environment:
       flutter: stable
       xcode: latest
       cocoapods: default
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.manaralhudha.app.manarAlHuda
     scripts:
       - name: Set up code signing settings on Xcode project
         script: |
@@ -28,3 +33,6 @@ workflows:
         notify:
           failure: true
           success: true
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
