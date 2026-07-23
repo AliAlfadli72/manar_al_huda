@@ -10,19 +10,15 @@ workflows:
       xcode: latest
       cocoapods: default
     scripts:
-      - name: Fetch and create signing files automatically
-        script: |
-          app-store-connect fetch-signing-files "com.manaralhudha.app.manarAlHuda" --type IOS_APP_STORE --create
-          xcode-project use-profiles
       - name: Get Flutter packages
         script: |
           flutter packages pub get
       - name: Build IPA for iOS
         script: |
-          flutter build ipa --release \
-            --export-options-plist=/Users/builder/export_options.plist
+          flutter build ipa --release --no-codesign
     artifacts:
       - build/ios/ipa/*.ipa
+      - build/ios/archive/*.xcarchive
       - /tmp/xcodebuild_logs/*.log
     publishing:
       email:
@@ -31,6 +27,3 @@ workflows:
         notify:
           failure: true
           success: true
-      app_store_connect:
-        auth: integration
-        submit_to_testflight: true
