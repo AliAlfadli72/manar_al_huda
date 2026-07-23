@@ -31,9 +31,15 @@ workflows:
         script: |
           flutter build ipa --release \
             --export-options-plist=/Users/builder/export_options.plist
+          echo "=== BUILD OUTPUT FILES ==="
+          ls -la build/ios/ipa || true
+          find build -name "*.ipa" -o -name "*.xcarchive" || true
 
     artifacts:
       - build/ios/ipa/*.ipa
+      - build/ios/archive/*.xcarchive
+      - "*.ipa"
+      - "**/*.ipa"
       - /tmp/xcodebuild_logs/*.log
 
     publishing:
