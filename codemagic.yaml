@@ -16,8 +16,17 @@ workflows:
       - name: Fetch matching signing files from App Store Connect
         script: |
           keychain initialize
+
+          PRIVATE_KEY=$(openssl genrsa 2048 2>/dev/null)
+
           app-store-connect fetch-signing-files com.manaralhudha.app.manarAlHuda \
-            --type IOS_APP_STORE
+            --type IOS_APP_STORE \
+            --certificate-key "$PRIVATE_KEY" || \
+          app-store-connect fetch-signing-files com.manaralhudha.app.manarAlHuda \
+            --type IOS_APP_STORE \
+            --certificate-key "$PRIVATE_KEY" \
+            --create
+
           keychain add-certificates
 
       - name: Get Flutter dependencies & prepare iOS
