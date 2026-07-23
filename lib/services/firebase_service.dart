@@ -63,6 +63,19 @@ class FirebaseService {
     await _auth.signOut();
   }
 
+  // Delete Account
+  Future<void> deleteAccount() async {
+    final user = _auth.currentUser;
+    if (user != null) {
+      final uid = user.uid;
+      try {
+        await _firestore.collection('users').doc(uid).delete();
+      } catch (_) {}
+      await user.delete();
+    }
+  }
+
+
   // Stream user profile
   Stream<DocumentSnapshot<Map<String, dynamic>>> streamUserProfile(String uid) {
     return _firestore.collection('users').doc(uid).snapshots();

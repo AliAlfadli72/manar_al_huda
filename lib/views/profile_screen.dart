@@ -1065,10 +1065,132 @@ class _ProfileScreenState extends State<ProfileScreen> {
               }
             },
           ),
+          const Divider(height: 1.0, color: Color(0xFFE2E8F0)),
+
+          // Delete Account (Required by Apple Guidelines)
+          _buildActionItem(
+            icon: Icons.delete_forever_rounded,
+            iconColor: const Color(0xFFDC2626),
+            title: 'حذف الحساب نهائياً',
+            subtitle: 'إزالة كامل بياناتك وسجلاتك وفق سياسة حماية البيانات',
+            titleColor: const Color(0xFFDC2626),
+            onTap: () {
+              HapticFeedback.heavyImpact();
+              _showDeleteAccountDialog(context);
+            },
+          ),
         ],
       ),
     );
   }
+
+  // Delete Account Confirmation Dialog (Apple Store Guidelines Compliance)
+  void _showDeleteAccountDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogCtx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Text(
+                'حذف الحساب نهائياً',
+                style: GoogleFonts.cairo(
+                  color: const Color(0xFFDC2626),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16.0,
+                ),
+              ),
+              const SizedBox(width: 8.0),
+              const Icon(Icons.warning_amber_rounded, color: Color(0xFFDC2626), size: 24.0),
+            ],
+          ),
+          content: Text(
+            'هل أنت متأكد من أنك تريد حذف حسابك نهائياً؟ سيتم مسح كافة سجلاتك ونقاطك وأوسمتك من تطبيق منار الهدى ولا يمكن استرجاع الحساب بعد ذلك.',
+            style: GoogleFonts.cairo(
+              color: const Color(0xFF475569),
+              fontSize: 13.0,
+              height: 1.5,
+            ),
+            textAlign: TextAlign.right,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogCtx),
+              child: Text(
+                'إلغاء',
+                style: GoogleFonts.cairo(
+                  color: const Color(0xFF64748B),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFDC2626),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+                elevation: 0,
+              ),
+              onPressed: () async {
+                Navigator.pop(dialogCtx);
+                
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (_) => const Center(
+                    child: CircularProgressIndicator(color: Color(0xFFDC2626)),
+                  ),
+                );
+
+                try {
+                  await _firebaseService.deleteAccount();
+                  if (context.mounted) {
+                    Navigator.pop(context); // Pop loading dialog
+                    if (Navigator.canPop(context)) {
+                      Navigator.pop(context); // Pop Profile screen if pushed
+                    }
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'تم حذف الحساب وجميع البيانات نهائياً',
+                          style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.bold),
+                          textAlign: TextAlign.right,
+                        ),
+                        backgroundColor: const Color(0xFFDC2626),
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    Navigator.pop(context); // Pop loading dialog
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'لأسباب أمنية من أبل وFirebase، يتطلب حذف الحساب إعادة تسجيل الدخول أولاً.',
+                          style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.bold),
+                          textAlign: TextAlign.right,
+                        ),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              },
+              child: Text(
+                'تأكيد الحذف النهائي',
+                style: GoogleFonts.cairo(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
 
   // Quick Action List Tile Builder
   Widget _buildActionItem({
