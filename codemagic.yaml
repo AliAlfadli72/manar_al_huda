@@ -11,34 +11,17 @@ workflows:
       flutter: stable
       xcode: latest
       cocoapods: default
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.manaralhudha.app.manarAlHuda
 
     scripts:
-      - name: Get Flutter dependencies
-        script: flutter pub get
-
-      - name: Create certificate and provisioning profile
+      - name: Get Flutter dependencies & prepare iOS
         script: |
-          # Initialize a fresh unlocked keychain for this build
-          keychain initialize
-
-          # Fetch existing signing files or create if not present
-          app-store-connect fetch-signing-files com.manaralhudha.app.manarAlHuda \
-            --type IOS_APP_STORE || app-store-connect fetch-signing-files com.manaralhudha.app.manarAlHuda --type IOS_APP_STORE --create
-
-          # Add the .p12 certificate to the initialized keychain
-          keychain add-certificates
-
-      - name: Remove alpha channel from app icons
-        script: |
-          find ios/Runner/Assets.xcassets/AppIcon.appiconset -name "*.png" | while read icon; do
-            sips -s format bmp "$icon" --out /tmp/_icon_tmp.bmp 2>/dev/null
-            sips -s format png /tmp/_icon_tmp.bmp --out "$icon" 2>/dev/null
-          done
-
-      - name: Install CocoaPods dependencies
-        script: |
-          cd ios
-          pod install
+          flutter pub get
+          flutter build ios --config-only
+          find ios -name "Package.swift" -exec sed -i '' 's/"13.0"/"15.0"/g; s/"12.0"/"15.0"/g; s/"11.0"/"15.0"/g; s/"14.0"/"15.0"/g' {} + 2>/dev/null || true
+          cd ios && pod install
 
       - name: Configure code signing
         script: xcode-project use-profiles
