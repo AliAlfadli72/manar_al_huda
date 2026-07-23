@@ -12,15 +12,16 @@ workflows:
       xcode: latest
       cocoapods: default
       ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.manaralhudha.app.manarAlHuda
+        provisioning_profiles:
+          - manar_al_huda_profile
+        certificates:
+          - Manar Distribution Cert
 
     scripts:
       - name: Get Flutter dependencies & prepare iOS
         script: |
           flutter pub get
           flutter build ios --config-only
-          find ios -name "Package.swift" -exec sed -i '' 's/"13.0"/"15.0"/g; s/"12.0"/"15.0"/g; s/"11.0"/"15.0"/g; s/"14.0"/"15.0"/g' {} + 2>/dev/null || true
           cd ios && pod install
 
       - name: Configure code signing
