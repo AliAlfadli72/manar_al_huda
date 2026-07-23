@@ -18,6 +18,7 @@ workflows:
       - name: Get Flutter packages & install pods
         script: |
           flutter packages pub get
+          flutter build ios --config-only
           cd ios && pod install
       - name: Set up code signing settings on Xcode project
         script: |
