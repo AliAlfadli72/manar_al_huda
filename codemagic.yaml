@@ -28,10 +28,11 @@ workflows:
           xcode-project use-profiles
       - name: Build IPA for iOS
         script: |
-          flutter build ipa --release
+          flutter build ipa --release \
+            --export-options-plist=/Users/builder/export_options.plist
     artifacts:
       - build/ios/ipa/*.ipa
-      - "**/*.ipa"
+      - $HOME/build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
     publishing:
       email:
