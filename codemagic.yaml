@@ -11,13 +11,15 @@ workflows:
       flutter: stable
       xcode: latest
       cocoapods: default
-      ios_signing:
-        provisioning_profiles:
-          - manar_al_huda_profile
-        certificates:
-          - Manar Distribution Cert
 
     scripts:
+      - name: Fetch matching signing files from App Store Connect
+        script: |
+          keychain initialize
+          app-store-connect fetch-signing-files com.manaralhudha.app.manarAlHuda \
+            --type IOS_APP_STORE
+          keychain add-certificates
+
       - name: Get Flutter dependencies & prepare iOS
         script: |
           flutter pub get
@@ -30,11 +32,8 @@ workflows:
 
       - name: Build iOS IPA
         script: |
-          flutter build ipa --release
-          xcodebuild -exportArchive \
-            -archivePath $(find build/ios -name "*.xcarchive" | head -n 1) \
-            -exportPath build/ios/ipa \
-            -exportOptionsPlist /Users/builder/export_options.plist
+          flutter build ipa --release \
+            --export-options-plist=/Users/builder/export_options.plist
 
     artifacts:
       - build/ios/ipa/*.ipa
