@@ -29,11 +29,7 @@ workflows:
 
       - name: Build iOS IPA
         script: |
-          flutter build ipa --release \
-            --export-options-plist=/Users/builder/export_options.plist
-          echo "=== BUILD OUTPUT FILES ==="
-          ls -la build/ios/ipa || true
-          find build -name "*.ipa" -o -name "*.xcarchive" || true
+          xcode-project build-ipa --workspace ios/Runner.xcworkspace --scheme Runner
 
     artifacts:
       - build/ios/ipa/*.ipa
