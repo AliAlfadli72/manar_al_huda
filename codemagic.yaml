@@ -21,14 +21,14 @@ workflows:
         script: |
           flutter packages pub get
           flutter build ios --config-only
-          echo "IPHONEOS_DEPLOYMENT_TARGET = 15.0" >> ios/Flutter/Generated.xcconfig
-          find ios/Flutter/ephemeral/Packages -name "Package.swift" -exec sed -i '' 's/\.v11/\.v15/g; s/\.v12/\.v15/g; s/\.v13/\.v15/g; s/\.v14/\.v15/g' {} + 2>/dev/null || true
+          find ios -name "Package.swift" -exec sed -i '' 's/"13.0"/"15.0"/g; s/"12.0"/"15.0"/g; s/"11.0"/"15.0"/g; s/"14.0"/"15.0"/g' {} + 2>/dev/null || true
           cd ios && pod install
       - name: Set up code signing settings on Xcode project
         script: |
           xcode-project use-profiles
       - name: Build IPA for iOS
         script: |
+          find ios -name "Package.swift" -exec sed -i '' 's/"13.0"/"15.0"/g; s/"12.0"/"15.0"/g; s/"11.0"/"15.0"/g; s/"14.0"/"15.0"/g' {} + 2>/dev/null || true
           xcode-project build-ipa --workspace ios/Runner.xcworkspace --scheme Runner
     artifacts:
       - build/ios/ipa/*.ipa
