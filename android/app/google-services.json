@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "723913344905",
+    "project_id": "manar-al-huda-c1f37",
+    "storage_bucket": "manar-al-huda-c1f37.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:723913344905:android:d298ba53240bee1f6d8358",
+        "android_client_info": {
+          "package_name": "com.manaralhudha.app.manar_al_huda"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBn7EMTwzoVOT4EtznlaxLCLoLVmvpIgXI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
