@@ -1,46 +1,90 @@
 workflows:
-  ios-workflow:
-    name: iOS Release Workflow
-    instance_type: mac_mini_m1
+  ios-release:
+    name: iOS Release Build
     max_build_duration: 60
+    instance_type: mac_mini_m2
+
     integrations:
       app_store_connect: Codemagic Build Key
+
     environment:
       flutter: stable
       xcode: latest
       cocoapods: default
-      vars:
-        IPHONEOS_DEPLOYMENT_TARGET: "15.0"
-      ios_signing:
-        provisioning_profiles:
-          - manar_al_huda_profile
-        certificates:
-          - Manar Distribution Cert
+
     scripts:
-      - name: Get Flutter packages & install pods
+      - name: Get Flutter dependencies
+        script: flutter pub get
+
+      - name: Create certificate and provisioning profile
         script: |
-          flutter packages pub get
-          flutter build ios --config-only
-          find ios -name "Package.swift" -exec sed -i '' 's/"13.0"/"15.0"/g; s/"12.0"/"15.0"/g; s/"11.0"/"15.0"/g; s/"14.0"/"15.0"/g' {} + 2>/dev/null || true
-          cd ios && pod install
-      - name: Set up code signing settings on Xcode project
+          # Initialize a fresh unlocked keychain for this build
+          keychain initialize
+
+          # Revoke all existing Distribution certificates to avoid Apple's 2-certificate limit
+          python3 -c "
+          import json, subprocess, sys
+
+          print('Fetching existing certificates from App Store Connect...')
+          res = subprocess.run(['app-store-connect', 'certificates', 'list', '--json'], capture_output=True, text=True)
+          if res.returncode == 0 and res.stdout.strip():
+              try:
+                  data = json.loads(res.stdout)
+                  items = data.get('data', data) if isinstance(data, dict) else data
+                  if isinstance(items, list):
+                      for item in items:
+                          cid = item.get('id') if isinstance(item, dict) else None
+                          attrs = item.get('attributes', {}) if isinstance(item, dict) and isinstance(item.get('attributes'), dict) else {}
+                          ctype = attrs.get('certificateType') or (item.get('certificateType') if isinstance(item, dict) else '') or ''
+                          if cid:
+                              print(f'Found certificate {cid} (Type: {ctype})')
+                              print(f'Revoking certificate {cid}...')
+                              subprocess.run(['app-store-connect', 'certificates', 'revoke', '--certificate-id', str(cid)], capture_output=True, text=True)
+                              subprocess.run(['app-store-connect', 'certificates', 'revoke', str(cid)], capture_output=True, text=True)
+              except Exception as e:
+                  print(f'Error parsing certificates: {e}')
+          else:
+              print(f'Certificates list response/error: {res.stderr}')
+          " || true
+
+          # Generate private key on the fly
+          PRIVATE_KEY=$(openssl genrsa 2048 2>/dev/null)
+
+          # Fetch/create signing files passing the key (creates .p12 + provisioning profile)
+          app-store-connect fetch-signing-files com.manaralhudha.app.manarAlHuda \
+            --type IOS_APP_STORE \
+            --certificate-key "$PRIVATE_KEY" \
+            --create
+
+          # Add the .p12 certificate to the initialized keychain
+          keychain add-certificates
+
+      - name: Remove alpha channel from app icons
         script: |
-          xcode-project use-profiles
-      - name: Build IPA for iOS
+          find ios/Runner/Assets.xcassets/AppIcon.appiconset -name "*.png" | while read icon; do
+            sips -s format bmp "$icon" --out /tmp/_icon_tmp.bmp 2>/dev/null
+            sips -s format png /tmp/_icon_tmp.bmp --out "$icon" 2>/dev/null
+          done
+
+      - name: Install CocoaPods dependencies
+        script: |
+          cd ios
+          pod install
+
+      - name: Configure code signing
+        script: xcode-project use-profiles
+
+      - name: Build iOS IPA
         script: |
           flutter build ipa --release \
             --export-options-plist=/Users/builder/export_options.plist
+
     artifacts:
       - build/ios/ipa/*.ipa
-      - $HOME/build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
+
     publishing:
-      email:
-        recipients:
-          - nuwasoftware0@gmail.com
-        notify:
-          failure: true
-          success: true
       app_store_connect:
         auth: integration
         submit_to_testflight: true
+        submit_to_app_store: false
