@@ -11,16 +11,18 @@ workflows:
       vars:
         BUNDLE_ID: "com.manaralhudha.app.manarAlHuda"
     scripts:
-      - name: Initialize keychain
+      - name: Initialize keychain and fetch signing files
         script: |
           keychain initialize
-      - name: Fetch and generate signing files
-        script: |
+          
+          # Generate SSH/RSA Key to store certificate locally in keychain
+          RSA_KEY=$(openssl genrsa 2048 2>/dev/null)
+          
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_STORE \
+            --certificate-key "$RSA_KEY" \
             --create
-      - name: Add certificates to keychain
-        script: |
+            
           keychain add-certificates
       - name: Get Flutter dependencies & prepare iOS
         script: |
