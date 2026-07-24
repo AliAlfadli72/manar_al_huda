@@ -8,8 +8,6 @@ workflows:
       flutter: stable
       xcode: latest
       cocoapods: default
-      vars:
-        BUNDLE_ID: com.manaralhudha.app.manarAlHuda
       ios_signing:
         distribution_type: app_store
         bundle_identifier: com.manaralhudha.app.manarAlHuda
@@ -19,11 +17,6 @@ workflows:
           flutter pub get
           flutter build ios --config-only
           cd ios && pod install
-      - name: Fetch and generate signing profiles
-        script: |
-          app-store-connect fetch-signing-files "$BUNDLE_ID" \
-            --type IOS_APP_STORE \
-            --create
       - name: Set up code signing settings on Xcode project
         script: |
           xcode-project use-profiles
