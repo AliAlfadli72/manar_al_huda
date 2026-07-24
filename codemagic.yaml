@@ -11,15 +11,11 @@ workflows:
       flutter: stable
       xcode: latest
       cocoapods: default
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.manaralhudha.app.manarAlHuda
 
     scripts:
-      - name: Fetch matching signing files from App Store Connect
-        script: |
-          keychain initialize
-          app-store-connect fetch-signing-files com.manaralhudha.app.manarAlHuda \
-            --type IOS_APP_STORE
-          keychain add-certificates
-
       - name: Get Flutter dependencies & prepare iOS
         script: |
           flutter pub get
@@ -28,7 +24,8 @@ workflows:
           cd ios && pod install
 
       - name: Configure code signing
-        script: xcode-project use-profiles
+        script: |
+          xcode-project use-profiles
 
       - name: Build iOS IPA
         script: |
